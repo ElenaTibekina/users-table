@@ -1,16 +1,16 @@
-import { ChangeEvent, UIEvent } from "react";
+import { useContext, type ChangeEvent, type UIEvent } from "react";
 import { useThrottle } from "../../hooks/useThrottle";
 import { Alert, Input, Table } from "antd";
 import { columns } from "./columns";
-import { useUsers } from "../../hooks/useUsers";
-import { useUsersSearch } from "../../hooks/useUsersSearch";
 import styles from "./Users.module.css";
-
-const pageSize = 5;
+import { UsersContext } from "../../store/UsersContext";
 
 export const Users = () => {
-  const { users, loading, error, loadMore } = useUsers(pageSize);
-  const { searchQuery, setSearchQuery, filteredUsers } = useUsersSearch(users);
+  const usersCtx = useContext(UsersContext);
+
+  if (!usersCtx) return null;
+
+  const { users, loading, error, loadMore, searchQuery, setSearchQuery, filteredUsers } = usersCtx;
 
   function onInputChange(e: ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
@@ -19,18 +19,19 @@ export const Users = () => {
 
   const handleTableScroll = useThrottle((e: UIEvent<HTMLDivElement>) => {
     const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
-    if (scrollHeight - scrollTop - clientHeight < 50) {
+    if (scrollHeight - scrollTop - clientHeight <= 250) {
       loadMore();
     }
   }, 300);
 
   if (error) {
-    return <Alert message={error} type="error" showIcon />;
+    return <Alert title={error} type="error" showIcon />;
   }
 
   return (
     <div className={styles.usersWrapper}>
       <Input
+        id="search"
         placeholder="Search by name or email..."
         value={searchQuery}
         onChange={onInputChange}
@@ -41,8 +42,9 @@ export const Users = () => {
         rowKey="id"
         pagination={false}
         loading={loading && users.length === 0}
-        scroll={{ y: 350 }}
+        scroll={{ x: "max-content", y: 500 }}
         onScroll={handleTableScroll}
+        tableLayout="fixed"
       />
 
       {loading && users.length > 0 && (
