@@ -1,26 +1,34 @@
-import { useContext, type ChangeEvent, type UIEvent } from "react";
+import { useEffect, type ChangeEvent, type UIEvent } from "react";
 import { useThrottle } from "../../hooks/useThrottle";
 import { Alert, Input, Table } from "antd";
 import { columns } from "./columns";
 import styles from "./Users.module.css";
-import { UsersContext } from "../../store/UsersContext";
+
+import { useAppDispatch, useAppSelector } from "../../store";
+import { fetchUsers, incrementPage, selectFilteredUsers, setSearchQuery } from "../../store/slices/usersSlice";
+import { PAGE_VALUES } from "../../lib/consts";
 
 export const Users = () => {
-  const usersCtx = useContext(UsersContext);
+  const dispatch = useAppDispatch();
 
-  if (!usersCtx) return null;
+  const { users, loading, error, searchQuery, currentPage, total } = useAppSelector((state) => state.users);
 
-  const { users, loading, error, loadMore, searchQuery, setSearchQuery, filteredUsers } = usersCtx;
+  const filteredUsers = useAppSelector(selectFilteredUsers);
+
+  useEffect(() => {
+    dispatch(fetchUsers({ page: currentPage, pageSize: PAGE_VALUES.page_size }));
+  }, [dispatch, currentPage]);
 
   function onInputChange(e: ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value;
-    setSearchQuery(value);
+    dispatch(setSearchQuery(e.target.value));
   }
 
   const handleTableScroll = useThrottle((e: UIEvent<HTMLDivElement>) => {
     const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
-    if (scrollHeight - scrollTop - clientHeight <= 250) {
-      loadMore();
+    if (scrollHeight - scrollTop - clientHeight < 50) {
+      if (!loading && users.length < total) {
+        dispatch(incrementPage());
+      }
     }
   }, 300);
 

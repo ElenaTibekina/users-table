@@ -27,3 +27,12 @@ export interface PaginatedResponse<T> {
   data: T[];
   total: number;
 }
+
+export interface UsersState {
+  users: User[];
+  loading: boolean;
+  error: string | null;
+  total: number;
+  currentPage: number;
+  searchQuery: string;
+}
