@@ -1,4 +1,4 @@
-import { ChangeEvent, UIEvent } from "react";
+import { type ChangeEvent, type UIEvent } from "react";
 import { useThrottle } from "../../hooks/useThrottle";
 import { Alert, Input, Table } from "antd";
 import { columns } from "./columns";
